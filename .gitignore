@@ -1,0 +1,4 @@
+*.o
+i2c-pulse-diag
+report.json
+*.tmp
