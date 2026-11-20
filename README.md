@@ -20,3 +20,4 @@ make clean && make
 ./i2c-pulse-diag --sim 24960 --profile ina219 -n 3 -i 100 -o report.json
 ./i2c-pulse-diag --sim 32000 --profile ina219 --exit-code
 ./i2c-pulse-diag -b 1 -a 0x40 -r 0x02 --profile ina219 -n 5 -i 200 -o report.json
+
