@@ -2,3 +2,4 @@
 i2c-pulse-diag
 report.json
 *.tmp
+deliverables/sht3x_qa/c_audit/qa_report_audit
