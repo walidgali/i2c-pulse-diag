@@ -7,3 +7,4 @@ i2c-pulse-diag
 compile_commands.json
 CMakeCache.txt
 CMakeFiles/
+test_mock
