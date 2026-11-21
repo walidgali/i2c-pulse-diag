@@ -1,3 +1,5 @@
+[![Build and Test](https://github.com/walidgali/i2c-pulse-diag/actions/workflows/build.yml/badge.svg)](https://github.com/walidgali/i2c-pulse-diag/actions/workflows/build.yml)
+
 
 
 
