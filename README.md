@@ -1,4 +1,18 @@
+
+
+
+
+
+
+
+
+
+
+
 # i2c-pulse-diag
+
+
+
 
 Lightweight C11 command-line diagnostic utility for Linux I2C buses (/dev/i2c-X), multi-sensor register/bit-profile evaluation, statistical drift tracking, strict threshold exit codes, and JSON report generation.
 
