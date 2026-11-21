@@ -5,26 +5,17 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
+# إضافة مجلد include للبحث عن الملفات
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_compile_options(-Wall -Wextra -Wpedantic)
-# هذا السطر هو الحل السحري لمشكلة usleep
-add_compile_definitions(_DEFAULT_SOURCE)
+# بناء المكتبة الأساسية
+add_library(i2c_core STATIC 
+    src/i2c_linux.c 
+    src/i2c_mock.c
+)
 
-add_library(i2c_core STATIC i2c_linux.c)
-target_include_directories(i2c_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-option(I2C_BUILD_MOCK "Build mock I2C backend" ON)
-if(I2C_BUILD_MOCK)
-    add_library(i2c_mock STATIC i2c_mock.c)
-    target_link_libraries(i2c_mock PUBLIC i2c_core)
-endif()
-
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.c")
-    add_executable(i2c-pulse-diag main.c)
-    target_link_libraries(i2c-pulse-diag PRIVATE i2c_core)
-    include(GNUInstallDirs)
-    install(TARGETS i2c-pulse-diag RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
+# تفعيل الاختبارات
+enable_testing()
+add_executable(test_mock tests/test_mock.c)
+target_link_libraries(test_mock PRIVATE i2c_core)
+add_test(NAME MockTest COMMAND test_mock)
