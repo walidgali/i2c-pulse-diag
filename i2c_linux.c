@@ -1,6 +1,5 @@
 /* i2c_linux.c - Linux /dev/i2c-N backend */
 #include "i2c.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
@@ -114,32 +113,36 @@ void i2c_ctx_close(i2c_ctx_t *ctx) {
     memset(ctx, 0, sizeof(*ctx));
 }
 
-static int retry_loop(i2c_ctx_t *ctx, int (*op)(void*,uint8_t,uint8_t,uint8_t*,size_t),
-                      void *priv, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len) {
+int i2c_read_reg(i2c_ctx_t *ctx, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len) {
+    if (!ctx || !ctx->ops || !buf || len == 0 || !i2c_is_valid_addr(addr)) { errno = EINVAL; return -1; }
     uint32_t attempts = ctx->retries ? ctx->retries : 1;
-    int last = 0;
+    int last_errno = 0;
     for (uint32_t i = 0; i < attempts; i++) {
         errno = 0;
-        if (op(priv, addr, reg, buf, len) == 0) return 0;
-        last = errno ? errno : EIO;
-        if (last == ENXIO || last == EREMOTEIO || last == EINVAL || last == EFAULT) {
-            errno = last; return -1;
+        if (ctx->ops->read(ctx->priv, addr, reg, buf, len) == 0) return 0;
+        last_errno = errno ? errno : EIO;
+        if (last_errno == ENXIO || last_errno == EREMOTEIO || last_errno == EINVAL || last_errno == EFAULT) {
+            errno = last_errno; return -1;
         }
         if (i + 1 < attempts && ctx->retry_delay_us) usleep(ctx->retry_delay_us * (i + 1));
     }
-    errno = last; return -1;
-}
-
-int i2c_read_reg(i2c_ctx_t *ctx, uint8_t addr, uint8_t reg, uint8_t *buf, size_t len) {
-    if (!ctx || !ctx->ops || !buf || len == 0 || !i2c_is_valid_addr(addr)) { errno = EINVAL; return -1; }
-    return retry_loop(ctx, ctx->ops->read, ctx->priv, addr, reg, buf, len);
+    errno = last_errno; return -1;
 }
 
 int i2c_write_reg(i2c_ctx_t *ctx, uint8_t addr, uint8_t reg, const uint8_t *buf, size_t len) {
     if (!ctx || !ctx->ops || (len > 0 && !buf) || !i2c_is_valid_addr(addr)) { errno = EINVAL; return -1; }
-    uint8_t tmp[256];
-    if (len > 0) memcpy(tmp, buf, len);
-    return retry_loop(ctx, ctx->ops->write, ctx->priv, addr, reg, tmp, len);
+    uint32_t attempts = ctx->retries ? ctx->retries : 1;
+    int last_errno = 0;
+    for (uint32_t i = 0; i < attempts; i++) {
+        errno = 0;
+        if (ctx->ops->write(ctx->priv, addr, reg, buf, len) == 0) return 0;
+        last_errno = errno ? errno : EIO;
+        if (last_errno == ENXIO || last_errno == EREMOTEIO || last_errno == EINVAL || last_errno == EFAULT) {
+            errno = last_errno; return -1;
+        }
+        if (i + 1 < attempts && ctx->retry_delay_us) usleep(ctx->retry_delay_us * (i + 1));
+    }
+    errno = last_errno; return -1;
 }
 
 int i2c_probe(i2c_ctx_t *ctx, uint8_t addr) {

@@ -10,6 +10,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic)
+# هذا السطر هو الحل السحري لمشكلة usleep
+add_compile_definitions(_DEFAULT_SOURCE)
 
 add_library(i2c_core STATIC i2c_linux.c)
 target_include_directories(i2c_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
